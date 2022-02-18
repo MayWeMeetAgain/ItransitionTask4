@@ -1,0 +1,1 @@
+web: java -jar target/UsersSecure-1.0.jar

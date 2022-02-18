@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <title>Hello WebSocket</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.0/handlebars.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.1.1/list.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.4.0/sockjs.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet"
+          type="text/css">
+</head>
+<body class="bg-dark text-white-50">
+<div id="main-content">
+    <form class="container-md" style="max-width: 500px;">
+        <div class="mb-1"><label class="row justify-content-between"> Text: <textarea class="mt-1" name="text" id="text" required autofocus> </textarea></label></div>
+        <div class="mb-1"><label class="row justify-content-between"> to User: <input class="mt-1" type="text" name="to_user" id="to_user" required autofocus/> </label></div>
+
+        <div class="text-center"><button class="btn btn-primary mt-3" type="submit" id="send">Send</button></div>
+    </form>
+</div>
+<div class="m-4">
+    <h3><label>Your Messages: </label><span id="message"></span></h3>
+    <div><ul id="messages_list" class="container" style="list-style-type: none;"><li></li></ul></div>
+</div>
+<script>
+    var stompClient = null;
+
+    $.get('https://ryannel-task3.herokuapp.com/currentUser', function (response) {
+        console.log(response)
+        connect(response);
+    });
+
+    var from;
+    $.get('https://ryannel-task4.herokuapp.com/currentUser', function (response) {
+        from = response;
+    });
+
+    $("#send").click(function() {
+        sendMsg($("#to_user").val(), from, $("#text").val());
+    });
+
+    function connect(username) {
+        var socket = new SockJS('/chat');
+        console.log(socket);
+        stompClient = Stomp.over(socket);
+        console.log();
+        stompClient.connect({ username: username }, function() {
+            console.log('Web Socket is connected');
+            stompClient.subscribe('/topic/messages/' + username, function(response) {
+                let data = JSON.parse(response.body);
+                console.log("qwa")
+                var templateResponse = Handlebars.compile($("#message-template").html());
+                var contextResponse = {
+                    message: data.message,
+                    time: new Date().toLocaleTimeString().replace(/([\d]+:[\d]{2})(:[\d]{2})(.*)/, "$1$3"),
+                    userName: data.fromUsername
+                };
+                    var list = document.getElementById('messages_list')
+                    var firstLi = list.getElementsByTagName('li')[0]
+                    var newListElem = document.createElement('li')
+                    newListElem.innerHTML = templateResponse(contextResponse)
+
+                    list.insertBefore(newListElem, firstLi)
+            });
+        });
+    }
+
+    function sendMsg(to, from, text) {
+        console.log(to)
+        stompClient.send("/app/chat/" + to, {}, JSON.stringify({
+            fromUsername:from,
+            message:text
+        }))
+    }
+
+</script>
+<script id="message-template" type="text/x-handlebars-template">
+<div class="m-2 p-2" style="background-color: lightskyblue; color: darkblue; width: 900px;">
+        <div class="message-data align-right">
+            <div class="message-data-time">Date: {{time}}</div>
+            <div class="message-data-name">From: {{userName}}</div>
+        </div>
+        <div class="message other-message float-right">
+                Text: {{message}}
+        </div>
+</div>
+</script>
+</body>
+</html>
