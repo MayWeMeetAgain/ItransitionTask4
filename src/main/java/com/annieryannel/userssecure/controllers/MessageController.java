@@ -1,6 +1,7 @@
 package com.annieryannel.userssecure.controllers;
 
-import com.annieryannel.userssecure.models.MessageModel;
+import com.annieryannel.userssecure.DTOs.MessageDTO;
+import com.annieryannel.userssecure.entities.Message;
 import com.annieryannel.userssecure.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.MessagingException;
@@ -8,8 +9,6 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class MessageController {
@@ -26,10 +25,12 @@ public class MessageController {
 //        return "home";
 //    }
 
+
     @MessageMapping("/chat/{to}")
-    public void sendMessage(@DestinationVariable String to, MessageModel message) {
+    public void sendMessage(@DestinationVariable String to, MessageDTO message) {
         System.out.println("handling send message: " + message + "to: " + to);
 
+        userService.saveMessage(to, message.getFromUsername(), message.getMessage());
         boolean isActive = userService.isUserActive(userService.getUserByUsername(to));
         try {
         if (isActive) {

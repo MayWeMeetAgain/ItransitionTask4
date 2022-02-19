@@ -1,7 +1,9 @@
 package com.annieryannel.userssecure.service;
 
+import com.annieryannel.userssecure.entities.Message;
 import com.annieryannel.userssecure.entities.Role;
 import com.annieryannel.userssecure.entities.User;
+import com.annieryannel.userssecure.repositories.MessageRepository;
 import com.annieryannel.userssecure.repositories.RoleRepository;
 import com.annieryannel.userssecure.repositories.UserRepository;
 import com.annieryannel.userssecure.utils.Roles;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class UserService implements UserDetailsService, ApplicationListener<AuthenticationSuccessEvent> {
@@ -24,6 +27,8 @@ public class UserService implements UserDetailsService, ApplicationListener<Auth
     UserRepository userRepository;
     @Autowired
     RoleRepository roleRepository;
+    @Autowired
+    MessageRepository messageRepository;
     @Autowired
     BCryptPasswordEncoder bCryptPasswordEncoder;
 
@@ -94,4 +99,20 @@ public class UserService implements UserDetailsService, ApplicationListener<Auth
         user.setLastLoginDate(new Date());
         userRepository.save(user);
     }
+
+    public Set<Message> getMessagesForCurrentUser() {
+        User current_user = getCurrentUser();
+        return messageRepository.findAllByReceiverOrderByDateDesc(current_user.getId());
+    }
+
+    public void saveMessage(String to, String from, String text) {
+        Message message = new Message();
+        message.setReceiver(userRepository.findByUsername(to).getId());
+        message.setFromUsername(from);
+        message.setDate(new Date());
+        message.setText(text);
+        System.out.println(message);
+        messageRepository.save(message);
+    }
+
 }

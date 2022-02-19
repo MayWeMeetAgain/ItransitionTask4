@@ -23,23 +23,43 @@
     </form>
 </div>
 <div class="m-4">
-    <h3><label>Your Messages: </label><span id="message"></span></h3>
-    <div><ul id="messages_list" class="container" style="list-style-type: none;"><li></li></ul></div>
+    <h4><label>Your Messages: </label><span id="message"></span></h4>
+    <div class="accordion" id="messages_list" style="color: black; max-width: 900px;">
+        <div class="accordion-item" th:each="message : ${messages}">
+            <h2 class="accordion-header" th:id="'heading'+${message.id}">
+                <button class="accordion-button collapsed" style="background-color: lightskyblue;" type="button" data-bs-toggle="collapse" th:data-bs-target="'#collapse'+${message.id}" aria-expanded="false" th:aria-controls="'collapse'+${message.id}">
+                    <div th:text="'From: ' + ${message.fromUsername}"></div>
+                    <div th:text="', Sended: ' + ${message.date}"></div>
+                </button>
+            </h2>
+            <div th:id="'collapse'+${message.id}" class="accordion-collapse collapse" th:aria-labelledby="'heading'+${message.id}" data-bs-parent="#messages_list">
+                <div class="accordion-body" th:text="${message.text}">
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <script>
     var stompClient = null;
+    var num = 0
 
-    $.get('https://ryannel-task4.herokuapp.com/currentUser', function (response) {
+   // const url = "https://ryannel-task4.herokuapp.com/"
+    const url = 'http://localhost:8080/'
+
+    $.get(url + 'currentUser', function (response) {
         console.log(response)
         connect(response);
     });
 
     var from;
-    $.get('https://ryannel-task4.herokuapp.com/currentUser', function (response) {
+    $.get(url + 'currentUser', function (response) {
         from = response;
     });
 
     $("#send").click(function() {
+        console.log($("#to_user"))
+        console.log(from)
+        console.log($("#text").val())
         sendMsg($("#to_user").val(), from, $("#text").val());
     });
 
@@ -56,38 +76,47 @@
                 var templateResponse = Handlebars.compile($("#message-template").html());
                 var contextResponse = {
                     message: data.message,
-                    time: new Date().toLocaleTimeString().replace(/([\d]+:[\d]{2})(:[\d]{2})(.*)/, "$1$3"),
+                    time: new Date().toLocaleString(),
                     userName: data.fromUsername
                 };
                     var list = document.getElementById('messages_list')
-                    var firstLi = list.getElementsByTagName('li')[0]
-                    var newListElem = document.createElement('li')
+                    var firstLi = list.childNodes[0]
+                    var newListElem = document.createElement('div')
                     newListElem.innerHTML = templateResponse(contextResponse)
 
                     list.insertBefore(newListElem, firstLi)
+                    num -= 1
             });
         });
     }
 
     function sendMsg(to, from, text) {
         console.log(to)
+        console.log(from)
+        console.log(text)
+
         stompClient.send("/app/chat/" + to, {}, JSON.stringify({
             fromUsername:from,
             message:text
-        }))
+        }));
     }
 
 </script>
 <script id="message-template" type="text/x-handlebars-template">
-<div class="m-2 p-2" style="background-color: lightskyblue; color: darkblue; width: 900px;">
-        <div class="message-data align-right">
-            <div class="message-data-time">Date: {{time}}</div>
-            <div class="message-data-name">From: {{userName}}</div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" th:id="'heading'+num">
+            <button class="accordion-button collapsed" style="background-color: lightskyblue;" type="button" data-bs-toggle="collapse" th:data-bs-target="'#collapse'+num" aria-expanded="false" th:aria-controls="'collapse'+num">
+                <div>From: {{userName}}</div>
+                <div>, Sended: {{time}}</div>
+            </button>
+        </h2>
+        <div th:id="'collapse'+num" class="accordion-collapse collapse" th:aria-labelledby="'heading'+num" data-bs-parent="#messages_list">
+            <div class="accordion-body">
+                {{message}}
+            </div>
         </div>
-        <div class="message other-message float-right">
-                Text: {{message}}
-        </div>
-</div>
+    </div>
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 </body>
 </html>
