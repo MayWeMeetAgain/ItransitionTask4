@@ -32,22 +32,7 @@ public class Message{
     @Column(name = "receiver")
     private Long receiver;
 
-    @Override
-    public String toString() {
-        return "Message{" +
-                "id=" + id +
-                ", fromUsername='" + fromUsername + '\'' +
-                ", text='" + text + '\'' +
-                ", date=" + date +
-                ", receiver=" + receiver +
-                '}';
-    }
+    @Column(name = "theme")
+    private String theme;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
 }

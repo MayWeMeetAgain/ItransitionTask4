@@ -15,16 +15,10 @@ public class MainController {
     @Autowired
     private UserService userService;
 
-//    @GetMapping("/")
-//    public String home_base(Model model) {
-//        model.addAttribute("users", userService.loadAllUsers());
-//        return "home";
-//    }
-
-
     @GetMapping("/")
     public String getMessage(Model model) {
         model.addAttribute("messages", userService.getMessagesForCurrentUser());
+        model.addAttribute("currentUser", userService.getCurrentUser().getUsername());
         return "home";
     }
 

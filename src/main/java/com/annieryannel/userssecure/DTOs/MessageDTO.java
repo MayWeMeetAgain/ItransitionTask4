@@ -16,4 +16,7 @@ public class MessageDTO {
 
     @JsonProperty(namespace = "message")
     private String message;
+
+    @JsonProperty(namespace = "theme")
+    private String theme;
 }

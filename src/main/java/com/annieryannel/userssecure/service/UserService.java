@@ -41,10 +41,6 @@ public class UserService implements UserDetailsService, ApplicationListener<Auth
         return user;
     }
 
-    public List<User> loadAllUsers() {
-        return userRepository.findAll();
-    }
-
     public boolean saveUser(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {return false;}
         userRepository.save(setRegistrationParams(user));
@@ -105,13 +101,18 @@ public class UserService implements UserDetailsService, ApplicationListener<Auth
         return messageRepository.findAllByReceiverOrderByDateDesc(current_user.getId());
     }
 
-    public void saveMessage(String to, String from, String text) {
+    private Message createMessage(String to, String from, String text, String theme) {
         Message message = new Message();
         message.setReceiver(userRepository.findByUsername(to).getId());
         message.setFromUsername(from);
         message.setDate(new Date());
         message.setText(text);
-        System.out.println(message);
+        message.setTheme(theme);
+        return message;
+    }
+
+    public void saveMessage(String to, String from, String text, String theme) {
+        Message message = createMessage(to, from, text, theme);
         messageRepository.save(message);
     }
 
